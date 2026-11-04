@@ -14,3 +14,5 @@ jobs:
       - run: npm install
       - run: npx expo install --check
       - run: npm run typecheck
+      - name: Verify static website build
+        run: npx expo export --platform web
