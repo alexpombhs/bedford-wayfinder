@@ -1,17 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import * as DevClient from 'expo-dev-client';
 import { SitesProvider } from '../src/context/SitesContext';
 import { BottomNavigation } from '../src/components/BottomNavigation';
 import { colors } from '../src/theme';
 
 export default function RootLayout() {
-  useEffect(() => {
-    // Floating Expo development menu is not part of Wayfinder navigation.
-    if (__DEV__) DevClient.setToolsButtonVisible(false);
-  }, []);
   return <SafeAreaProvider><SitesProvider><View style={{ flex: 1 }}>
     <Stack screenOptions={{
       headerStyle: { backgroundColor: colors.background },
