@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Bedford Wayfinder",
+    "slug": "bedford-wayfinder",
+    "scheme": "bedfordwayfinder",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Bedford Wayfinder to show your position while exploring historical places."
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "org.bedfordwayfinder.app"
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

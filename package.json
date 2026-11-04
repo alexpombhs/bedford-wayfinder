@@ -1,0 +1,33 @@
+{
+  "name": "bedford-wayfinder",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "~57.0.23",
+    "expo-router": "~57.0.29",
+    "expo-location": "~57.0.22",
+    "expo-speech": "~57.0.3",
+    "expo-status-bar": "~57.0.1",
+    "expo-linking": "~57.0.13",
+    "expo-constants": "~57.0.22",
+    "expo-dev-client": "~57.0.20",
+    "@maplibre/maplibre-react-native": "^11.4.0",
+    "@supabase/supabase-js": "^2.0.0",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-url-polyfill": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.4",
+    "typescript": "~6.0.3"
+  }
+}
