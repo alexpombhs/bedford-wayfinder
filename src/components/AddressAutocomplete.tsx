@@ -81,7 +81,7 @@ export function AddressAutocomplete({
       value={value}
       onChangeText={onChangeText}
       onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
+      onBlur={() => { setTimeout(() => setFocused(false), 180); }}
       autoCapitalize="words" autoCorrect={false}
       accessibilityLabel="Starting address"
       returnKeyType="done"
