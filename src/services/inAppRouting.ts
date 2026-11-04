@@ -71,8 +71,8 @@ export async function planInAppRoute(from: LngLat, to: LngLat, mode: DirectionsM
   return { points, steps, lengthKm: Number(json.trip.summary?.length) || 0, timeSeconds: Number(json.trip.summary?.time) || 0 };
 }
 
-export async function planRouteFromAddress(origin: string, mode: DirectionsMode) {
-  const from = await geocodeOrigin(origin);
+export async function planRouteFromAddress(origin: string, mode: DirectionsMode, selectedCoordinates?: LngLat) {
+  const from = selectedCoordinates || await geocodeOrigin(origin);
   const to = await geocodeAddress(DEMO_DESTINATION.address);
   const route = await planInAppRoute(from, to, mode);
   return { from, to, route };

@@ -6,12 +6,14 @@ import type { CameraRef } from '@maplibre/maplibre-react-native';
 import * as Speech from 'expo-speech';
 import { DEMO_DESTINATION, SAMPLE_NARRATION, type DirectionsMode } from '../src/services/demoTour';
 import { planRouteFromAddress, type LngLat, type PlannedRoute } from '../src/services/inAppRouting';
+import { AddressAutocomplete, type AddressChoice } from '../src/components/AddressAutocomplete';
 
 const c = { bg: '#F8FAF8', green: '#194A41', red: '#EE2F31', muted: '#667973', ink: '#1E2C2B', border: '#DAE3DC', pale: '#EEF4F0' };
 const styleUrl = process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty';
 
 export default function DemoTour() {
   const [origin, setOrigin] = useState('');
+  const [addressChoice, setAddressChoice] = useState<AddressChoice | null>(null);
   const [mode, setMode] = useState<DirectionsMode>('walking');
   const [route, setRoute] = useState<PlannedRoute | null>(null);
   const [from, setFrom] = useState<LngLat | null>(null);
@@ -31,7 +33,7 @@ export default function DemoTour() {
     await Speech.stop();
     setSpeaking(false);
     try {
-      const result = await planRouteFromAddress(origin, mode);
+      const result = await planRouteFromAddress(origin, mode, addressChoice?.coordinates);
       setFrom(result.from);
       setTo(result.to);
       setRoute(result.route);
@@ -77,10 +79,10 @@ export default function DemoTour() {
 
       {!route && <View style={s.panel}>
         <Text style={s.label}>STARTING POINT</Text>
-        <TextInput style={s.input} placeholder="Enter a starting street address"
-          placeholderTextColor={c.muted} value={origin} onChangeText={setOrigin}
-          autoCapitalize="words" autoCorrect={false} accessibilityLabel="Starting address" />
-        <Text style={s.small}>Your address is not stored. The device's geocoder processes it; coordinates are sent to the routing provider.</Text>
+        <AddressAutocomplete value={origin} selected={!!addressChoice}
+          onChangeText={text => { setOrigin(text); setAddressChoice(null); }}
+          onSelect={choice => { setOrigin(choice.label); setAddressChoice(choice); }} />
+        <Text style={s.small}>Your address is not stored in Wayfinder. When starting a route, coordinates are sent to the routing provider.</Text>
         <Text style={s.label}>DESTINATION · HISTORICAL POINT 1</Text>
         <View style={s.row}>
           <View style={s.redMarker}><Text style={s.white}>01</Text></View>
