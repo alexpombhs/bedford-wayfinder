@@ -1,34 +1,88 @@
-import React from 'react';
-import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, Text } from 'react-native';
-import { colors, spacing } from '../src/theme';
-import { useSites } from '../src/context/SitesContext';
+import React, { useState } from 'react';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BottomNav, wf } from '../src/components/WayfinderUI';
+
+type TravelMode = 'Walk' | 'Bike' | 'Drive';
+
 export default function Home() {
-  const { sites, loading, error } = useSites();
-  return <ScrollView contentContainerStyle={styles.container}>
-    <Text style={styles.eyebrow}>BEDFORD / WAYFINDER</Text>
-    <Text style={styles.hero}>Historic Trails</Text>
-    <Text style={styles.body}>Explore Bedford one story at a time. Plan a route and listen to history along the way.</Text>
-    <Link href="/demo-tour" style={styles.primary}>Try a guided audio tour →</Link>
-    <Text style={styles.caption}>Sample directions + spoken narration</Text>
-    <Link href="/tours" style={styles.secondary}>Build your own tour →</Link>
-    <Link href="/map" style={styles.secondary}>Explore the map →</Link>
-    <Text style={styles.label}>HISTORICAL PLACES</Text>
-    {loading ? <Text>Loading sites…</Text> : error ? <Text>Couldn't load sites: {error}</Text> : sites.map((site) =>
-      <Link key={site.id} href={{ pathname: '/site/[id]', params: { id: site.id } }} style={styles.card}>{site.name} →</Link>
-    )}
-    <Text style={styles.note}>The starter's original historical-site data is illustrative. Verify locations and historical sources before publishing.</Text>
-  </ScrollView>;
+  const [mode, setMode] = useState<TravelMode>('Walk');
+  return (
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.brand}>BEDFORD  /  WAYFINDER</Text>
+        <Text style={styles.title}>Historic Trails</Text>
+        <Text style={styles.subtitle}>Explore Bedford one story at a time.</Text>
+
+        <View style={styles.modeRow}>
+          {(['Walk', 'Bike', 'Drive'] as const).map((item) => {
+            const selected = mode === item;
+            return (
+              <Pressable key={item} onPress={() => setMode(item)} style={[styles.mode, selected && styles.modeSelected]}>
+                <Text style={[styles.modeText, selected && styles.modeTextSelected]}>{item}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.search}>
+          <Text style={styles.searchIcon}>⌕</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search trails or landmarks"
+            placeholderTextColor={wf.muted}
+          />
+        </View>
+
+        <Text style={styles.sectionLabel}>FEATURED TOUR</Text>
+        <Pressable style={styles.trailCard} onPress={() => router.push('/tours')}>
+          <View style={styles.photoPlaceholder}>
+            <Text style={styles.placeholderText}>HISTORICAL PHOTO</Text>
+          </View>
+          <Text style={styles.cardTitle}>Revolutionary Bedford</Text>
+          <Text style={styles.cardSubtitle}>Explore Bedford’s Revolutionary heritage</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.badge}><Text style={styles.badgeText}>6 stops</Text></View>
+            <View style={styles.badge}><Text style={styles.badgeText}>1.5 miles</Text></View>
+          </View>
+        </Pressable>
+
+        <Text style={styles.sectionLabel}>OTHER TRAILS</Text>
+        <Pressable style={styles.compactCard} onPress={() => router.push('/tours')}>
+          <Text style={styles.compactText}>Historic Homes Trail</Text>
+          <Text style={styles.arrow}>→</Text>
+        </Pressable>
+      </ScrollView>
+      <BottomNav active="explore" />
+    </SafeAreaView>
+  );
 }
+
 const styles = StyleSheet.create({
-  container: { padding: spacing.lg, gap: spacing.md, backgroundColor: '#F8FAF8', flexGrow: 1 },
-  eyebrow: { color: '#194A41', fontWeight: '700', letterSpacing: 2 },
-  hero: { fontSize: 34, fontWeight: '700', color: '#1E2C2B' },
-  body: { fontSize: 16, lineHeight: 26, color: '#667973' },
-  primary: { overflow: 'hidden', backgroundColor: '#EE2F31', color: '#fff', padding: 17, borderRadius: 12, fontWeight: '700', textAlign: 'center' },
-  caption: { color: '#667973', fontSize: 12, textAlign: 'center' },
-  secondary: { color: '#194A41', padding: 15, fontWeight: '700' },
-  label: { color: '#667973', fontWeight: '700' },
-  card: { backgroundColor: colors.surface, padding: 20, borderWidth: 1, borderColor: '#DAE3DC', borderRadius: 12, color: '#1E2C2B', fontSize: 17 },
-  note: { color: '#667973', fontSize: 12, marginTop: 24 },
+  safe: { flex: 1, backgroundColor: wf.background },
+  content: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 116, gap: 10 },
+  brand: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: '#42BDF0' },
+  title: { fontSize: 28, lineHeight: 36, fontWeight: '700', color: wf.navy },
+  subtitle: { fontSize: 14, lineHeight: 18, color: '#65749A' },
+  modeRow: { flexDirection: 'row', gap: 9, height: 40 },
+  mode: { flex: 1, height: 40, borderRadius: 12, borderWidth: 1, borderColor: wf.border, alignItems: 'center', justifyContent: 'center', backgroundColor: wf.surface },
+  modeSelected: { backgroundColor: wf.blue, borderColor: wf.blue },
+  modeText: { fontSize: 14, fontWeight: '700', color: wf.ink },
+  modeTextSelected: { color: '#FFFFFF' },
+  search: { height: 48, borderRadius: 12, borderWidth: 1, borderColor: wf.border, backgroundColor: wf.surface, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 12 },
+  searchIcon: { fontSize: 28, lineHeight: 28, color: wf.primary, transform: [{ rotate: '-15deg' }] },
+  searchInput: { flex: 1, fontSize: 14, color: wf.ink, paddingVertical: 0 },
+  sectionLabel: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: '#5E6E91' },
+  trailCard: { height: 280, borderRadius: 12, borderWidth: 1, borderColor: wf.border, backgroundColor: wf.surface, padding: 12, gap: 10 },
+  photoPlaceholder: { height: 122, borderRadius: 10, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 18 },
+  placeholderText: { fontSize: 12, color: wf.muted },
+  cardTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700', color: wf.ink },
+  cardSubtitle: { fontSize: 12, lineHeight: 16, color: wf.muted },
+  badgeRow: { flexDirection: 'row', gap: 8 },
+  badge: { width: 100, height: 30, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 10 },
+  badgeText: { fontSize: 12, color: wf.ink },
+  compactCard: { height: 53, borderRadius: 12, backgroundColor: wf.lightBlue, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 15 },
+  compactText: { fontSize: 15, fontWeight: '700', color: wf.navy },
+  arrow: { fontSize: 22, fontWeight: '700', color: wf.navy, marginRight: 83 },
 });
