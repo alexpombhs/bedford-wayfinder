@@ -12,10 +12,10 @@ import type { DirectionsMode } from '../src/services/demoTour';
 const styleUrl = process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty';
 
 export default function ExploreMap() {
-  const { start } = useLocalSearchParams<{ start?: string }>();
+  const { start, mode: requestedMode } = useLocalSearchParams<{ start?: string; mode?: string }>();
   const { sites, plan, busy, progress, error, locateSites, createTour } = useTour();
   const [address, setAddress] = useState(typeof start === 'string' ? start : '');
-  const [mode, setMode] = useState<DirectionsMode>('walking');
+  const [mode, setMode] = useState<DirectionsMode>(requestedMode === 'cycling' || requestedMode === 'bike' ? 'cycling' : requestedMode === 'driving' || requestedMode === 'drive' ? 'driving' : 'walking');
   const [siteError, setSiteError] = useState<string | null>(null);
   const [loadingSites, setLoadingSites] = useState(true);
   const camera = useRef<CameraRef>(null);
