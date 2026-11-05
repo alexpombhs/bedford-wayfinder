@@ -8,6 +8,7 @@ type TravelMode = 'Walk' | 'Bike' | 'Drive';
 
 export default function Home() {
   const [mode, setMode] = useState<TravelMode>('Walk');
+  const [startAddress, setStartAddress] = useState('');
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -30,10 +31,17 @@ export default function Home() {
           <Text style={styles.searchIcon}>⌕</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search trails or landmarks"
+            placeholder="Tour starting address or landmark"
+            value={startAddress}
+            onChangeText={setStartAddress}
+            onSubmitEditing={() => router.push({ pathname: '/map', params: { start: startAddress, mode: mode.toLowerCase() } })}
             placeholderTextColor={wf.muted}
           />
         </View>
+
+        <Pressable style={styles.createTour} onPress={() => router.push({ pathname: '/map', params: { start: startAddress, mode: mode.toLowerCase() } })}>
+          <Text style={styles.createTourLabel}>Plan my 5-stop tour  →</Text>
+        </Pressable>
 
         <Text style={styles.sectionLabel}>FEATURED TOUR</Text>
         <Pressable style={styles.trailCard} onPress={() => router.push('/tours')}>
@@ -43,8 +51,8 @@ export default function Home() {
           <Text style={styles.cardTitle}>Revolutionary Bedford</Text>
           <Text style={styles.cardSubtitle}>Explore Bedford’s Revolutionary heritage</Text>
           <View style={styles.badgeRow}>
-            <View style={styles.badge}><Text style={styles.badgeText}>6 stops</Text></View>
-            <View style={styles.badge}><Text style={styles.badgeText}>1.5 miles</Text></View>
+            <View style={styles.badge}><Text style={styles.badgeText}>5 stops</Text></View>
+            <View style={styles.badge}><Text style={styles.badgeText}>Live routing</Text></View>
           </View>
         </Pressable>
 
@@ -62,6 +70,8 @@ export default function Home() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: wf.background },
   content: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 116, gap: 10 },
+  createTour: { backgroundColor: wf.red, borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'center' },
+  createTourLabel: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   brand: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: '#42BDF0' },
   title: { fontSize: 28, lineHeight: 36, fontWeight: '700', color: wf.navy },
   subtitle: { fontSize: 14, lineHeight: 18, color: '#65749A' },
