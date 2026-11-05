@@ -1,13 +1,14 @@
 import React from 'react';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { SitesProvider } from '../src/context/SitesContext';
 import { colors } from '../src/theme';
+
 export default function RootLayout() {
-  return <SitesProvider><Stack screenOptions={{ headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.ink, contentStyle: { backgroundColor: colors.background } }}>
-    <Stack.Screen name="index" options={{ title: 'Bedford Wayfinder' }} />
-    <Stack.Screen name="demo-tour" options={{ title: 'Guided tour demo' }} />
-    <Stack.Screen name="map" options={{ title: 'Explore map' }} />
-    <Stack.Screen name="tours" options={{ title: 'Build a tour' }} />
-    <Stack.Screen name="site/[id]" options={{ title: 'Historical site' }} />
-  </Stack></SitesProvider>;
+  return (
+    <SitesProvider>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+    </SitesProvider>
+  );
 }
