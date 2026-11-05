@@ -1,74 +1,86 @@
 import React, { useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
+import * as Linking from 'expo-linking';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNav, wf } from '../../src/components/WayfinderUI';
-
-const narration = "Learn about the Bedford Flag and its place in the town's Revolutionary War story.";
+import { TOUR_SITES } from '../../src/data/tourSites';
 
 export default function SiteDetail() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const site = TOUR_SITES.find((s) => s.id === id);
   const [playing, setPlaying] = useState(false);
+  const [captions, setCaptions] = useState(false);
 
-  useEffect(() => () => { void Speech.stop(); }, []);
+  useEffect(() => () => { void Speech.stop(); }, [id]);
+  if (!site) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
+        <Text style={styles.storyCopy}>Historical site not found.</Text>
+        <BottomNav active="explore" />
+      </SafeAreaView>
+    );
+  }
 
-  async function toggleAudio() {
-    if (playing) {
-      await Speech.stop();
-      setPlaying(false);
-      return;
-    }
+  async function play() {
     await Speech.stop();
     setPlaying(true);
-    Speech.speak(narration, {
-      language: 'en-US',
+    Speech.speak(site!.description, {
       rate: 0.9,
+      language: 'en-US',
       onDone: () => setPlaying(false),
       onStopped: () => setPlaying(false),
       onError: () => setPlaying(false),
     });
   }
 
+  async function toggleAudio() {
+    if (playing) {
+      await Speech.stop();
+      setPlaying(false);
+    } else {
+      await play();
+    }
+  }
+
+  const stopNumber = TOUR_SITES.findIndex((s) => s.id === site.id) + 1;
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Pressable onPress={() => router.back()}><Text style={styles.back}>‹   Back to navigation</Text></Pressable>
-        <Text style={styles.title}>The Bedford Flag</Text>
-        <Text style={styles.kicker}>STOP 2 OF 6  •  HISTORICAL AUDIO</Text>
-
+        <Text style={styles.title}>{site.name}</Text>
+        <Text style={styles.kicker}>HISTORIC STOP {stopNumber} OF 5  •  AUDIO STORY</Text>
         <View style={styles.imagePlaceholder}>
           <Text style={styles.imageLabel}>HISTORICAL IMAGE</Text>
         </View>
-
-        <Text style={styles.storyTitle}>Stories of Revolutionary Bedford</Text>
-        <Text style={styles.storyCopy}>{narration}</Text>
+        <Text style={styles.storyTitle}>Stories of Bedford</Text>
+        <Text style={styles.storyCopy}>{site.description}</Text>
 
         <View style={styles.audioCard}>
           <View style={styles.audioTop}>
-            <Pressable style={styles.playButton} onPress={() => void toggleAudio()}>
+            <Pressable style={styles.playButton} onPress={() => void toggleAudio()} accessibilityRole="button">
               <Text style={styles.playIcon}>{playing ? 'Ⅱ' : '▷'}</Text>
             </Pressable>
-            <Text style={styles.audioName}>The Bedford Flag</Text>
+            <View style={styles.audioInformation}>
+              <Text style={styles.audioName}>{site.name}</Text>
+              <Text style={styles.meta}>Spoken history • device narration</Text>
+            </View>
           </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.meta}>Audio story</Text>
-            <Text style={styles.dot}>•</Text>
-            <Text style={styles.meta}>2 min 45 sec</Text>
-          </View>
-          <View style={styles.progressTrack}><View style={styles.progressFill} /></View>
           <View style={styles.controls}>
-            <Text style={styles.control}>Replay</Text>
-            <Text style={styles.control}>{playing ? 'Pause' : 'Pause'}</Text>
-            <Text style={styles.control}>Captions</Text>
+            <Pressable onPress={() => void play()}><Text style={styles.control}>Replay</Text></Pressable>
+            <Pressable onPress={() => void toggleAudio()}><Text style={styles.control}>{playing ? 'Stop' : 'Play'}</Text></Pressable>
+            <Pressable onPress={() => setCaptions((p) => !p)}><Text style={styles.control}>{captions ? 'Hide text' : 'Captions'}</Text></Pressable>
           </View>
         </View>
+        {captions && <View style={styles.captionCard}><Text style={styles.storyCopy}>{site.description}</Text></View>}
+        {site.privateProperty && <Text style={styles.warning}>Private residence — please view from public areas only.</Text>}
 
-        <View style={styles.moreInfo}>
-          <Text style={styles.moreInfoText}>▤  Photos, timeline & more information  →</Text>
-        </View>
-
-        <Pressable style={styles.cta} onPress={() => router.replace('/demo-tour')}>
-          <Text style={styles.ctaText}>Continue to next stop  →</Text>
+        <Pressable style={styles.moreInfo} onPress={() => void Linking.openURL(site.sourceUrl)}>
+          <Text style={styles.moreInfoText}>▤  Historical source & more information  ↗</Text>
+        </Pressable>
+        <Pressable style={styles.cta} onPress={() => router.back()}>
+          <Text style={styles.ctaText}>Continue tour  →</Text>
         </Pressable>
       </ScrollView>
       <BottomNav active="explore" />
@@ -85,20 +97,19 @@ const styles = StyleSheet.create({
   imagePlaceholder: { height: 190, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 18 },
   imageLabel: { fontSize: 12, fontWeight: '700', color: '#5E6E91' },
   storyTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700', color: wf.navy },
-  storyCopy: { fontSize: 14, lineHeight: 18, color: '#65749A' },
-  audioCard: { height: 155, borderWidth: 1, borderColor: wf.border, borderRadius: 12, backgroundColor: wf.surface, padding: 15, gap: 10 },
+  storyCopy: { fontSize: 14, lineHeight: 19, color: '#65749A' },
+  audioCard: { minHeight: 140, borderWidth: 1, borderColor: wf.border, borderRadius: 12, backgroundColor: wf.surface, padding: 15, gap: 13 },
   audioTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   playButton: { width: 48, height: 48, borderWidth: 1, borderColor: wf.border, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   playIcon: { fontSize: 26, color: wf.primary },
+  audioInformation: { flex: 1, gap: 5 },
   audioName: { fontSize: 15, lineHeight: 19, fontWeight: '700', color: wf.ink },
-  metaRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   meta: { fontSize: 12, color: wf.muted },
-  dot: { fontSize: 12, color: wf.muted },
-  progressTrack: { height: 4, borderRadius: 2, backgroundColor: '#E8EFEB', overflow: 'hidden' },
-  progressFill: { width: '38%', height: 4, backgroundColor: wf.primary },
   controls: { flexDirection: 'row', gap: 28 },
-  control: { fontSize: 12, color: wf.muted },
-  moreInfo: { height: 48, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 13 },
+  control: { fontSize: 12, color: wf.primary },
+  captionCard: { backgroundColor: wf.lightBlue, borderRadius: 12, padding: 13 },
+  warning: { color: '#A84A30', fontSize: 12, lineHeight: 18 },
+  moreInfo: { minHeight: 48, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 13 },
   moreInfoText: { fontSize: 14, color: wf.navy },
   cta: { height: 48, borderRadius: 12, backgroundColor: wf.red, alignItems: 'center', justifyContent: 'center' },
   ctaText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
