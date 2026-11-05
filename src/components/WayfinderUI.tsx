@@ -27,6 +27,7 @@ export function BottomNav({ active = 'explore' }: BottomNavProps) {
     { key: 'saved', label: 'Saved', icon: '⌑', go: undefined },
     { key: 'more', label: 'More', icon: '○', go: undefined },
   ] as const;
+
   return (
     <View style={styles.bottomNav}>
       {items.map((item) => {
@@ -59,7 +60,7 @@ export function RoutePreview() {
       <View style={[styles.routeH, { top: 84, left: 80, width: 166 }]} />
       <View style={[styles.routeV, { top: 84, left: 77, height: 92 }]} />
       <View style={[styles.routeV, { top: 84, left: 242, height: 64 }]} />
-      <View style={[styles.routeH, { top: 145, left: 245, width: 43 } }]} />
+      <View style={[styles.routeH, { top: 145, left: 245, width: 43 }]} />
       <View style={[styles.pin, { top: 163, left: 65 }]}><Text style={styles.pinText}>1</Text></View>
       <View style={[styles.pin, { top: 71, left: 230 }]}><Text style={styles.pinText}>2</Text></View>
       <View style={[styles.pin, { top: 133, left: 273 }]}><Text style={styles.pinText}>3</Text></View>
