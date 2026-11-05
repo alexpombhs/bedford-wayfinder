@@ -2,7 +2,7 @@ name: Typecheck
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, refine-figma-design]
 jobs:
   typecheck:
     runs-on: ubuntu-latest
