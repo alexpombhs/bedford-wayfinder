@@ -61,7 +61,7 @@ export default function DemoTour() {
   function nextDirection() {
     if (directionIndex < leg.route.steps.length - 1) {
       setDirectionIndex((value) => value + 1);
-    } else if (stopIndex < plan.legs.length - 1) {
+    } else if (stopIndex < 4) {
       setStopIndex((value) => value + 1);
       setDirectionIndex(0);
     } else {
