@@ -18,7 +18,8 @@
       ]
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "org.bedfordwayfinder.app"
     },
     "android": {
       "package": "org.bedfordwayfinder.app"
