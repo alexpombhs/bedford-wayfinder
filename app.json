@@ -15,6 +15,14 @@
         {
           "locationWhenInUsePermission": "Allow Bedford Wayfinder to show your position while exploring historical places."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
       ]
     ],
     "ios": {
