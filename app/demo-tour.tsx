@@ -35,9 +35,9 @@ export default function DemoTour() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
         <View style={styles.empty}>
           <Text style={styles.title}>Create your tour first</Text>
-          <Text style={styles.note}>Choose your location or a starting address on the map to generate directions to all five sites.</Text>
-          <Pressable style={styles.primaryButton} onPress={() => router.replace('/map')}>
-            <Text style={styles.primaryText}>Open interactive map  →</Text>
+          <Text style={styles.note}>Choose your favorite historic places and a starting point to generate your guided tour.</Text>
+          <Pressable style={styles.primaryButton} onPress={() => router.replace('/tour-builder')}>
+            <Text style={styles.primaryText}>Build my guided tour  →</Text>
           </Pressable>
         </View>
         <BottomNav active="map" />
@@ -61,7 +61,7 @@ export default function DemoTour() {
   function nextDirection() {
     if (directionIndex < leg.route.steps.length - 1) {
       setDirectionIndex((value) => value + 1);
-    } else if (stopIndex < 4) {
+    } else if (stopIndex < plan.legs.length - 1) {
       setStopIndex((value) => value + 1);
       setDirectionIndex(0);
     } else {
@@ -79,7 +79,7 @@ export default function DemoTour() {
             <Text style={styles.walkingText}>{plan.mode === 'walking' ? 'Walking' : plan.mode === 'cycling' ? 'Biking' : 'Driving'}</Text>
           </View>
           <View style={styles.stepBadge}>
-            <Text style={styles.stepText}>Stop {stopIndex + 1} / 5</Text>
+            <Text style={styles.stepText}>Stop {stopIndex + 1} / {plan.legs.length}</Text>
           </View>
         </View>
 
