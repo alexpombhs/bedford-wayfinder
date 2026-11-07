@@ -23,11 +23,10 @@ type ContextValue = {
   progress: string;
   error: string | null;
   locateSites: () => Promise<LocatedSite[]>;
-  createTour: (address: string, mode: DirectionsMode, useCurrentLocation: boolean) => Promise<boolean>;
+  createTour: (address: string, mode: DirectionsMode, useCurrentLocation: boolean, selectedIds: string[]) => Promise<boolean>;
 };
 
 const TourContext = createContext<ContextValue | null>(null);
-const bedfordBounds = (p: LngLat) => p[0] > -71.40 && p[0] < -71.18 && p[1] > 42.39 && p[1] < 42.58;
 const haversine = (a: LngLat, b: LngLat) => {
   const radians = (degrees: number) => degrees * Math.PI / 180;
   const dLat = radians(b[1] - a[1]);
@@ -62,7 +61,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     return TOUR_SITES;
   }
 
-  async function createTour(address: string, mode: DirectionsMode, useCurrentLocation: boolean) {
+  async function createTour(address: string, mode: DirectionsMode, useCurrentLocation: boolean, selectedIds: string[]) {
     if (busy) return false;
     setBusy(true);
     setError(null);
@@ -81,13 +80,15 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
         if (!address.trim()) throw new Error('Enter a starting address or select My location.');
         start = await geocodeOrigin(address);
       }
-      setProgress('Preparing five historic destinations…');
-      const located = await locateSites();
+      const selectedSet = new Set(selectedIds);
+      const located = sites.filter((site) => selectedSet.has(site.id));
+      if (located.length === 0) throw new Error('Select at least one historical location to build a tour.');
+      setProgress('Preparing ' + located.length + ' historic destination' + (located.length === 1 ? '…' : 's…'));
       const ordered = nearestFirst(start, located);
       const legs: TourLeg[] = [];
       let from = start;
       for (let i = 0; i < ordered.length; i++) {
-        setProgress('Finding directions to stop ' + (i + 1) + ' of 5…');
+        setProgress('Finding directions to stop ' + (i + 1) + ' of ' + ordered.length + '…');
         const route = await planInAppRoute(from, ordered[i].coordinate, mode);
         legs.push({ destination: ordered[i], route });
         from = ordered[i].coordinate;
