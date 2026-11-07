@@ -24,7 +24,7 @@ export default function TourBuilder() {
 
   async function startTour(useGps: boolean) {
     const ok = await createTour(address, mode, useGps, selected);
-    if (ok) router.push('/map');
+    if (ok) router.push('/demo-tour');
   }
 
   return (
