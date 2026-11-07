@@ -1,6 +1,6 @@
 import React from 'react';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNav, RoutePreview, wf } from '../src/components/WayfinderUI';
 import { TOUR_SITES } from '../src/data/tourSites';
@@ -30,8 +30,10 @@ export default function Tours() {
             <View style={styles.stopNumber}><Text style={styles.stopNumberText}>{String(index + 1).padStart(2, '0')}</Text></View>
             <View style={styles.stopCopy}>
               <Text style={styles.stopTitle}>{site.name}</Text>
-              <Text numberOfLines={1} style={styles.stopSubtitle}>{site.address}</Text>
+              <Text numberOfLines={1} style={styles.stopSubtitle}>{site.description}</Text>
+              <Text style={styles.audioHint}>♪ Audio story · Photo · History</Text>
             </View>
+            <Image source={{ uri: site.photoUrl }} style={styles.stopPhoto} resizeMode="cover" accessibilityLabel={'Photo of ' + site.name} />
           </Pressable>
         ))}
 
@@ -59,6 +61,8 @@ const styles = StyleSheet.create({
   stopNumber: { width: 42, height: 42, borderRadius: 12, backgroundColor: wf.red, alignItems: 'center', justifyContent: 'center' },
   stopNumberText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
   stopCopy: { flex: 1, gap: 4 },
+  stopPhoto: { width: 56, height: 56, borderRadius: 8, backgroundColor: wf.lightBlue },
+  audioHint: { color: wf.blue, fontSize: 10, fontWeight: '600' },
   stopTitle: { fontSize: 15, lineHeight: 19, fontWeight: '700', color: wf.ink },
   stopSubtitle: { fontSize: 12, lineHeight: 16, color: wf.muted },
   cta: { height: 48, borderRadius: 12, backgroundColor: wf.red, alignItems: 'center', justifyContent: 'center' },
