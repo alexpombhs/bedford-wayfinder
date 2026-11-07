@@ -17,6 +17,7 @@ export default function DemoTour() {
   const [stopIndex, setStopIndex] = useState(0);
   const [directionIndex, setDirectionIndex] = useState(0);
   const camera = useRef<CameraRef>(null);
+  const autoStarted = useRef(false);
   const [isFocused, setIsFocused] = useState(false);
   const [styleReady, setStyleReady] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -29,10 +30,11 @@ export default function DemoTour() {
   // Start foreground proximity narration when a guided tour begins.
   // This requests location permission and does not track location in the background.
   useEffect(() => {
-    if (isFocused && plan && !autoNarration) {
+    if (isFocused && plan && !autoStarted.current) {
+      autoStarted.current = true;
       void enableProximity();
     }
-  }, [isFocused, plan, autoNarration, enableProximity]);
+  }, [isFocused, plan, enableProximity]);
 
   useEffect(() => {
     if (!plan || !styleReady || !isFocused || plan.coordinates.length < 2) return;
