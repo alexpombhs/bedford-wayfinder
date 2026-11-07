@@ -56,7 +56,7 @@ export default function SiteDetail() {
           </View>
           <View style={styles.controls}>
             <Pressable onPress={() => { void replay(site); }}><Text style={styles.control}>Replay</Text></Pressable>
-            <Pressable onPress={() => void toggleAudio()}><Text style={styles.control}>{playing ? 'Pause' : 'Play / Resume'}</Text></Pressable>
+            <Pressable onPress={() => { void toggleSite(site); }}><Text style={styles.control}>{playing ? 'Pause' : 'Play / Resume'}</Text></Pressable>
             <Pressable onPress={() => setCaptions((p) => !p)}><Text style={styles.control}>{captions ? 'Hide text' : 'Captions'}</Text></Pressable>
           </View>
         </View>
