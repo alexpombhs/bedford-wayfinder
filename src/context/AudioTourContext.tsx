@@ -92,9 +92,11 @@ export function AudioTourProvider({ children }: { children: React.ReactNode }) {
     playback.current.siteId = site.id;
     playback.current.position = safeOffset;
     progressBySite.current[site.id] = safeOffset;
+    const isResumingSameStory = activeSiteRef.current?.id === site.id;
     activeSiteRef.current = site;
     setActiveSite(site);
-    setPlayerVisible(true);
+    // Resume from the minimized dock without unexpectedly expanding it.
+    setPlayerVisible(wasVisible => isResumingSameStory ? wasVisible : true);
     setProgress(safeOffset / Math.max(1, site.narration.length));
     setStatus('playing');
 
