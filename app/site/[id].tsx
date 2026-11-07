@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
 import * as Linking from 'expo-linking';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNav, wf } from '../../src/components/WayfinderUI';
 import { TOUR_SITES } from '../../src/data/tourSites';
@@ -26,7 +26,7 @@ export default function SiteDetail() {
   async function play() {
     await Speech.stop();
     setPlaying(true);
-    Speech.speak(site!.description, {
+    Speech.speak(site!.narration, {
       rate: 0.9,
       language: 'en-US',
       onDone: () => setPlaying(false),
@@ -51,11 +51,19 @@ export default function SiteDetail() {
         <Pressable onPress={() => router.back()}><Text style={styles.back}>‹   Back to navigation</Text></Pressable>
         <Text style={styles.title}>{site.name}</Text>
         <Text style={styles.kicker}>HISTORIC STOP {stopNumber} OF 5  •  AUDIO STORY</Text>
-        <View style={styles.imagePlaceholder}>
-          <Text style={styles.imageLabel}>HISTORICAL IMAGE</Text>
-        </View>
-        <Text style={styles.storyTitle}>Stories of Bedford</Text>
+        <Image
+          source={{ uri: site.photoUrl }}
+          style={styles.heroPhoto}
+          resizeMode="cover"
+          accessibilityLabel={'Historical photograph of ' + site.name}
+        />
+        <Pressable onPress={() => void Linking.openURL(site.photoSourceUrl)}>
+          <Text style={styles.photoCredit}>Photo: {site.photoCredit} · {site.photoLicense} · View image source ↗</Text>
+        </Pressable>
+        <Text style={styles.storyTitle}>History of {site.name}</Text>
         <Text style={styles.storyCopy}>{site.description}</Text>
+        <Text style={styles.storyTitle}>Audio tour story</Text>
+        <Text style={styles.storyCopy}>{site.narration}</Text>
 
         <View style={styles.audioCard}>
           <View style={styles.audioTop}>
@@ -64,7 +72,7 @@ export default function SiteDetail() {
             </Pressable>
             <View style={styles.audioInformation}>
               <Text style={styles.audioName}>{site.name}</Text>
-              <Text style={styles.meta}>Spoken history • device narration</Text>
+              <Text style={styles.meta}>Audio narration · English</Text>
             </View>
           </View>
           <View style={styles.controls}>
@@ -73,7 +81,7 @@ export default function SiteDetail() {
             <Pressable onPress={() => setCaptions((p) => !p)}><Text style={styles.control}>{captions ? 'Hide text' : 'Captions'}</Text></Pressable>
           </View>
         </View>
-        {captions && <View style={styles.captionCard}><Text style={styles.storyCopy}>{site.description}</Text></View>}
+        {captions && <View style={styles.captionCard}><Text style={styles.storyCopy}>{site.narration}</Text></View>}
         {site.privateProperty && <Text style={styles.warning}>Private residence — please view from public areas only.</Text>}
 
         <Pressable style={styles.moreInfo} onPress={() => void Linking.openURL(site.sourceUrl)}>
@@ -94,8 +102,8 @@ const styles = StyleSheet.create({
   back: { fontSize: 12, lineHeight: 16, color: '#42BDF0' },
   title: { fontSize: 28, lineHeight: 36, fontWeight: '700', color: wf.navy },
   kicker: { fontSize: 12, lineHeight: 16, fontWeight: '700', color: '#5E6E91' },
-  imagePlaceholder: { height: 190, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 18 },
-  imageLabel: { fontSize: 12, fontWeight: '700', color: '#5E6E91' },
+  heroPhoto: { width: '100%', height: 190, borderRadius: 12, backgroundColor: wf.lightBlue },
+  photoCredit: { fontSize: 11, lineHeight: 16, color: wf.muted, textDecorationLine: 'underline' },
   storyTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700', color: wf.navy },
   storyCopy: { fontSize: 14, lineHeight: 19, color: '#65749A' },
   audioCard: { minHeight: 140, borderWidth: 1, borderColor: wf.border, borderRadius: 12, backgroundColor: wf.surface, padding: 15, gap: 13 },
