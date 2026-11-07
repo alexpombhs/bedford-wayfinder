@@ -4,7 +4,7 @@ import { TOUR_SITES, type TourSite } from '../data/tourSites';
 import { geocodeOrigin, planInAppRoute, type LngLat, type PlannedRoute } from '../services/inAppRouting';
 import type { DirectionsMode } from '../services/demoTour';
 
-export type LocatedSite = TourSite & { coordinate: LngLat };
+export type LocatedSite = TourSite;
 export type TourLeg = { destination: LocatedSite; route: PlannedRoute };
 export type TourPlan = {
   start: LngLat;
@@ -50,27 +50,16 @@ function nearestFirst(origin: LngLat, sites: LocatedSite[]) {
 }
 
 export function TourProvider({ children }: { children: React.ReactNode }) {
-  const [sites, setSites] = useState<LocatedSite[]>([]);
+  const sites: LocatedSite[] = TOUR_SITES;
   const [plan, setPlan] = useState<TourPlan | null>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  async function locateSites() {
-    if (sites.length === TOUR_SITES.length) return sites;
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (!permission.granted) throw new Error('Location permission is needed for Android address lookup. Allow access to load the historic sites.');
-    const found: LocatedSite[] = [];
-    for (const site of TOUR_SITES) {
-      const result = await Location.geocodeAsync(site.address);
-      const first = result[0];
-      if (!first) throw new Error('Could not find coordinates for ' + site.name);
-      const coordinate: LngLat = [first.longitude, first.latitude];
-      if (!bedfordBounds(coordinate)) throw new Error('The map lookup for ' + site.name + ' returned a location outside Bedford.');
-      found.push({ ...site, coordinate });
-    }
-    setSites(found);
-    return found;
+  // Static landmark pins load instantly and without requesting GPS permission.
+  // GPS permission is requested only when the user chooses My location.
+  async function locateSites(): Promise<LocatedSite[]> {
+    return TOUR_SITES;
   }
 
   async function createTour(address: string, mode: DirectionsMode, useCurrentLocation: boolean) {
@@ -92,7 +81,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
         if (!address.trim()) throw new Error('Enter a starting address or select My location.');
         start = await geocodeOrigin(address);
       }
-      setProgress('Locating five historic destinations…');
+      setProgress('Preparing five historic destinations…');
       const located = await locateSites();
       const ordered = nearestFirst(start, located);
       const legs: TourLeg[] = [];
