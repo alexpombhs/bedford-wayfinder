@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -16,7 +16,6 @@ export default function SiteDetail() {
   const isCurrentStory = audioSite?.id === site?.id;
   const currentProgress = isCurrentStory ? progress : 0;
   function exitDetails() { if (router.canGoBack()) router.back(); else router.replace('/map'); }
-  const [captions, setCaptions] = useState(false);
 
   if (!site) {
     return (
@@ -75,12 +74,8 @@ export default function SiteDetail() {
             <Pressable accessibilityRole="button" accessibilityLabel="Restart story from beginning" onPress={() => { void replay(site); }}>
               <Text style={styles.control}>Restart from beginning</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => setCaptions((p) => !p)}>
-              <Text style={styles.control}>{captions ? 'Hide transcript' : 'Transcript'}</Text>
-            </Pressable>
           </View>
         </View>
-        {captions && <View style={styles.captionCard}><Text style={styles.storyCopy}>{site.narration}</Text></View>}
         {site.privateProperty && <Text style={styles.warning}>Private residence — please view from public areas only.</Text>}
 
         <Pressable style={styles.moreInfo} onPress={() => void Linking.openURL(site.sourceUrl)}>
@@ -121,7 +116,6 @@ const styles = StyleSheet.create({
   audioProgressTrack: { height: 4, backgroundColor: wf.border, borderRadius: 4, overflow: 'hidden' },
   audioProgress: { height: 4, backgroundColor: wf.blue },
   control: { fontSize: 12, color: wf.primary },
-  captionCard: { backgroundColor: wf.lightBlue, borderRadius: 12, padding: 13 },
   warning: { color: '#A84A30', fontSize: 12, lineHeight: 18 },
   moreInfo: { minHeight: 48, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 13 },
   moreInfoText: { fontSize: 14, color: wf.navy },
