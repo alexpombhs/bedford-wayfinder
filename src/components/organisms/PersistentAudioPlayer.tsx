@@ -12,8 +12,20 @@ import { wf } from '../WayfinderUI';
  * Never covers a page's Back/Close actions in its header.
  */
 export function PersistentAudioPlayer() {
-  const { activeSite, state, progress, playerVisible, dismissPlayer } = useAudioTour();
-  if (!activeSite || !playerVisible) return null;
+  const { activeSite, state, progress, playerVisible, dismissPlayer, showPlayer } = useAudioTour();
+  if (!activeSite) return null;
+
+  if (!playerVisible) {
+    return (
+      <View style={styles.minimized}>
+        <Pressable style={styles.expand} accessibilityRole="button" accessibilityLabel="Expand audio player"
+          onPress={showPlayer}>
+          <Ionicons name="headset-outline" size={22} color={wf.primary} />
+        </Pressable>
+        <NarrationPlayPauseButton site={activeSite} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -41,6 +53,8 @@ export function PersistentAudioPlayer() {
 }
 
 const styles = StyleSheet.create({
+  minimized: { position: 'absolute', bottom: 102, right: 24, flexDirection: 'row', alignItems: 'center', gap: 6, padding: 5, borderWidth: 1, borderColor: wf.border, borderRadius: 14, backgroundColor: wf.surface, zIndex: 40, elevation: 14 },
+  expand: { width: 44, height: 48, alignItems: 'center', justifyContent: 'center' },
   container: {
     position: 'absolute', left: 24, right: 24, bottom: 102,
     zIndex: 40, elevation: 14, borderRadius: 14, backgroundColor: wf.surface,
