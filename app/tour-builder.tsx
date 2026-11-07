@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { BottomNav, wf } from '../src/components/WayfinderUI';
 import { useTour } from '../src/context/TourContext';
 import type { DirectionsMode } from '../src/services/demoTour';
+import { MassachusettsAddressAutocomplete, type MassachusettsAddress } from '../src/components/atoms/MassachusettsAddressAutocomplete';
 
 export default function TourBuilder() {
   const { start, mode: requestedMode, preset } = useLocalSearchParams<{ start?: string; mode?: string; preset?: string }>();
   const { sites, createTour, busy, progress, error } = useTour();
   const [selected, setSelected] = useState<string[]>(preset === 'all' ? sites.map(site => site.id) : []);
   const [address, setAddress] = useState(typeof start === 'string' ? start : '');
+  const [selectedOrigin, setSelectedOrigin] = useState<MassachusettsAddress | null>(null);
   const [mode, setMode] = useState<DirectionsMode>(
     requestedMode === 'bike' || requestedMode === 'cycling' ? 'cycling' :
     requestedMode === 'drive' || requestedMode === 'driving' ? 'driving' : 'walking'
@@ -23,7 +25,7 @@ export default function TourBuilder() {
   }
 
   async function startTour(useGps: boolean) {
-    const ok = await createTour(address, mode, useGps, selected);
+    const ok = await createTour(address, mode, useGps, selected, selectedOrigin?.coordinates);
     if (ok) router.push('/demo-tour');
   }
 
@@ -73,11 +75,14 @@ export default function TourBuilder() {
         </View>
 
         <Text style={styles.sectionTitle}>STARTING LOCATION</Text>
-        <TextInput style={styles.input} value={address} onChangeText={setAddress}
-          placeholder="Enter an address or landmark" placeholderTextColor={wf.muted}
-          autoCapitalize="words" accessibilityLabel="Tour starting address" />
+        <MassachusettsAddressAutocomplete
+          value={address}
+          onChangeText={(text) => { setAddress(text); setSelectedOrigin(null); }}
+          onSelect={(choice) => { setAddress(choice.label); setSelectedOrigin(choice); }}
+          selected={selectedOrigin !== null}
+        />
 
-        <Pressable disabled={busy || selected.length === 0} style={[styles.cta, (busy || selected.length === 0) && styles.disabled]}
+        <Pressable disabled={busy || selected.length === 0 || !selectedOrigin} style={[styles.cta, (busy || selected.length === 0 || !selectedOrigin) && styles.disabled]}
           onPress={() => void startTour(false)}>
           {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.ctaText}>Start My Guided Tour  →</Text>}
         </Pressable>
@@ -89,7 +94,7 @@ export default function TourBuilder() {
         </Pressable>
         {busy && <Text style={styles.note}>{progress}</Text>}
         {!!error && <Text style={styles.error}>{error}</Text>}
-        <Text style={styles.note}>Select one or more places. You can add more locations as the Wayfinder collection grows. GPS is requested only if you choose your current location.</Text>
+        <Text style={styles.note}>Select one or more places. You can add more locations as the Wayfinder collection grows. The location search is limited to Massachusetts. GPS is requested only if you choose your current location.</Text>
       </ScrollView>
       <BottomNav active="explore" />
     </SafeAreaView>
