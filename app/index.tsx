@@ -34,13 +34,13 @@ export default function Home() {
             placeholder="Tour starting address or landmark"
             value={startAddress}
             onChangeText={setStartAddress}
-            onSubmitEditing={() => router.push({ pathname: '/map', params: { start: startAddress, mode: mode.toLowerCase() } })}
+            onSubmitEditing={() => router.push({ pathname: '/tour-builder', params: { start: startAddress, mode: mode.toLowerCase() } })}
             placeholderTextColor={wf.muted}
           />
         </View>
 
         <Pressable style={styles.createTour} onPress={() => router.push({ pathname: '/map', params: { start: startAddress, mode: mode.toLowerCase() } })}>
-          <Text style={styles.createTourLabel}>Plan my 5-stop tour  →</Text>
+          <Text style={styles.createTourLabel}>Start My Guided Tour  →</Text>
         </Pressable>
 
         <Text style={styles.sectionLabel}>FEATURED TOUR</Text>
