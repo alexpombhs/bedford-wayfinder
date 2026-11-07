@@ -1,21 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useRef } from 'react';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Camera, GeoJSONSource, Layer, Map, Marker } from '@maplibre/maplibre-react-native';
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import { BottomNav, wf } from '../src/components/WayfinderUI';
 import { TOUR_SITES } from '../src/data/tourSites';
 import { useTour } from '../src/context/TourContext';
-import type { DirectionsMode } from '../src/services/demoTour';
 
 const styleUrl = process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty';
 
 export default function ExploreMap() {
-  const { start, mode: requestedMode } = useLocalSearchParams<{ start?: string; mode?: string }>();
-  const { sites, plan, busy, progress, error, createTour } = useTour();
-  const [address, setAddress] = useState(typeof start === 'string' ? start : '');
-  const [mode, setMode] = useState<DirectionsMode>(requestedMode === 'cycling' || requestedMode === 'bike' ? 'cycling' : requestedMode === 'driving' || requestedMode === 'drive' ? 'driving' : 'walking');
+  const { sites, plan } = useTour();
+  const insets = useSafeAreaInsets();
   const camera = useRef<CameraRef>(null);
 
   useEffect(() => {
@@ -37,11 +34,6 @@ export default function ExploreMap() {
     properties: {},
     geometry: { type: 'LineString' as const, coordinates: plan.coordinates },
   } : null;
-
-  async function generate(useGps: boolean) {
-    const ok = await createTour(address, mode, useGps);
-    // Errors are exposed by the tour provider.
-  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom', 'left', 'right']}>
@@ -70,43 +62,19 @@ export default function ExploreMap() {
         })}
       </Map>
 
-      <View style={styles.topPanel}>
+      <View style={[styles.topPanel, { top: insets.top + 12 }]}>
         <Text style={styles.kicker}>BEDFORD  /  WAYFINDER</Text>
-        <Text style={styles.title}>Map & historic tour</Text>
-        <View style={styles.searchRow}>
-          <TextInput
-            style={styles.input}
-            value={address}
-            onChangeText={setAddress}
-            placeholder="Starting address in Bedford, MA"
-            placeholderTextColor={wf.muted}
-            autoCapitalize="words"
-            accessibilityLabel="Tour starting address"
-          />
-          <Pressable style={styles.gps} onPress={() => void generate(true)} disabled={busy} accessibilityRole="button">
-            <Text style={styles.gpsText}>My location</Text>
-          </Pressable>
-        </View>
-        <View style={styles.modeRow}>
-          {(['walking', 'cycling', 'driving'] as const).map((value) => (
-            <Pressable key={value} style={[styles.mode, mode === value && styles.modeActive]} onPress={() => setMode(value)}>
-              <Text style={[styles.modeText, mode === value && styles.modeActiveText]}>
-                {value === 'walking' ? 'Walk' : value === 'cycling' ? 'Bike' : 'Drive'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        <Pressable style={[styles.cta, busy && styles.disabled]} disabled={busy} onPress={() => void generate(false)}>
-          {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.ctaText}>Create my 5-stop tour  →</Text>}
+        <Text style={styles.title}>Explore Historic Bedford</Text>
+        <Text style={styles.helper}>Tap a marker to discover a place, or choose your own stops for a guided tour.</Text>
+        <Pressable style={styles.cta} onPress={() => router.push('/tour-builder')} accessibilityRole="button">
+          <Text style={styles.ctaText}>Start My Guided Tour  →</Text>
         </Pressable>
-        {busy && <Text style={styles.helper}>{progress}</Text>}
-        {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
 
       <View style={styles.bottomPanel}>
         {plan ? (
           <>
-            <Text style={styles.panelTitle}>Your tour · 5 stops</Text>
+            <Text style={styles.panelTitle}>Your tour · {plan.legs.length} stops</Text>
             <Text style={styles.panelSubtitle}>
               {plan.startLabel} · {(plan.distanceKm * 0.621371).toFixed(1)} mi · about {Math.round(plan.durationSeconds / 60)} min travel
             </Text>
@@ -123,8 +91,8 @@ export default function ExploreMap() {
           </>
         ) : (
           <>
-            <Text style={styles.panelTitle}>5 real Bedford historical places</Text>
-            <Text style={styles.panelSubtitle}>The five landmark markers load immediately without GPS permission. Choose your location to plan a route.</Text>
+            <Text style={styles.panelTitle}>Historic places to discover</Text>
+            <Text style={styles.panelSubtitle}>Explore the available landmarks, then create a personalized tour with the places you choose.</Text>
           </>
         )}
       </View>
