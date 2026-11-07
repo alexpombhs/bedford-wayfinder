@@ -35,7 +35,7 @@ export function PersistentAudioPlayer() {
         />
       </View>
       <View style={styles.track}>
-        <View style={[styles.progress, { width: Math.max(0, Math.min(100, progress * 100)) + '%' }]} />
+        <View style={[styles.progress, { width: (Math.max(0, Math.min(100, progress * 100)) + '%') as `${number}%` }]} />
       </View>
     </View>
   );
