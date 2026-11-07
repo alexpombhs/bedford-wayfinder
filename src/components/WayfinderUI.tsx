@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 
 export const wf = {
   background: '#F8FAF8',
@@ -22,10 +23,10 @@ type BottomNavProps = { active?: 'explore' | 'map' | 'saved' | 'more' };
 
 export function BottomNav({ active = 'explore' }: BottomNavProps) {
   const items = [
-    { key: 'explore', label: 'Explore', icon: '◉', go: () => router.replace('/') },
-    { key: 'map', label: 'Map', icon: '▥', go: () => router.push('/map') },
-    { key: 'saved', label: 'Saved', icon: '⌑', go: undefined },
-    { key: 'more', label: 'More', icon: '○', go: undefined },
+    { key: 'explore', label: 'Explore', icon: 'compass-outline', activeIcon: 'compass', go: () => router.replace('/') },
+    { key: 'map', label: 'Map', icon: 'map-outline', activeIcon: 'map', go: () => router.push('/map') },
+    { key: 'saved', label: 'Saved', icon: 'heart-outline', activeIcon: 'heart', go: undefined },
+    { key: 'more', label: 'More', icon: 'ellipsis-horizontal-circle-outline', activeIcon: 'ellipsis-horizontal-circle', go: undefined },
   ] as const;
 
   return (
@@ -40,7 +41,7 @@ export function BottomNav({ active = 'explore' }: BottomNavProps) {
             accessibilityRole="button"
             accessibilityState={{ selected }}
           >
-            <Text style={[styles.navIcon, selected && styles.navActive]}>{item.icon}</Text>
+            <Ionicons name={selected ? item.activeIcon : item.icon} size={25} color={selected ? wf.primary : wf.muted} />
             <Text style={[styles.navLabel, selected && styles.navActive]}>{item.label}</Text>
           </Pressable>
         );
@@ -86,7 +87,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   navItem: { width: 80, height: 62, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  navIcon: { fontSize: 26, lineHeight: 28, color: wf.primary, fontWeight: '500' },
   navLabel: { fontSize: 12, lineHeight: 16, color: wf.muted },
   navActive: { color: wf.primary },
   routeCard: {
