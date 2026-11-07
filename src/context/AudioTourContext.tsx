@@ -12,6 +12,7 @@ type AudioTourContextValue = {
   progress: number;
   playerVisible: boolean;
   dismissPlayer: () => void;
+  showPlayer: () => void;
   autoNarration: boolean;
   locationMessage: string | null;
   playSite: (site: TourSite) => Promise<void>;
@@ -49,6 +50,7 @@ export function AudioTourProvider({ children }: { children: React.ReactNode }) {
   const [progress, setProgress] = useState(0);
   const [playerVisible, setPlayerVisible] = useState(false);
   const dismissPlayer = useCallback(() => setPlayerVisible(false), []);
+  const showPlayer = useCallback(() => setPlayerVisible(true), []);
   const [autoNarration, setAutoNarration] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
 
@@ -236,7 +238,7 @@ export function AudioTourProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AudioTourContext.Provider value={{
-      activeSite, state, progress, playerVisible, dismissPlayer, autoNarration, locationMessage,
+      activeSite, state, progress, playerVisible, dismissPlayer, showPlayer, autoNarration, locationMessage,
       playSite, pause, resume, toggleSite, replay, enableProximity, disableProximity,
     }}>
       {children}
