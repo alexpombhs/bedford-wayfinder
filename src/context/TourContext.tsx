@@ -35,6 +35,36 @@ const haversine = (a: LngLat, b: LngLat) => {
   return 6371 * 2 * Math.asin(Math.sqrt(h));
 };
 
+/**
+ * iOS Simulator does not produce a position unless a simulated location is set.
+ * Prefer a fresh GPS fix, but accept a recent cached fix if the location provider
+ * temporarily fails. Never substitute Bedford or a saved address for device GPS.
+ */
+async function getDeviceOrigin(): Promise<LngLat> {
+  const permission = await Location.requestForegroundPermissionsAsync();
+  if (!permission.granted) {
+    throw new Error('Location access is off. Enable While Using the App in device settings, or choose a starting address below.');
+  }
+  const enabled = await Location.hasServicesEnabledAsync();
+  if (!enabled) {
+    throw new Error('Location Services are turned off. Enable them on your device or simulator, or choose a starting address below.');
+  }
+  try {
+    const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    return [current.coords.longitude, current.coords.latitude];
+  } catch {
+    // A short-lived cached result is more useful than failing on transient GPS
+    // errors; older fixes are not appropriate for live tour planning.
+    try {
+      const recent = await Location.getLastKnownPositionAsync({ maxAge: 120000, requiredAccuracy: 250 });
+      if (recent) return [recent.coords.longitude, recent.coords.latitude];
+    } catch {
+      // Ignore cache provider errors; the user receives a single clear message.
+    }
+    throw new Error('Your device could not determine its location. In the iOS Simulator, choose a location from the simulator’s Location menu. Or select a starting address from the suggestions instead.');
+  }
+}
+
 function nearestFirst(origin: LngLat, sites: LocatedSite[]) {
   const remaining = [...sites];
   const result: LocatedSite[] = [];
@@ -71,10 +101,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
       let start: LngLat;
       let startLabel = address.trim();
       if (useCurrentLocation) {
-        const permission = await Location.requestForegroundPermissionsAsync();
-        if (!permission.granted) throw new Error('Allow location access to create a tour from your current position, or enter an address.');
-        const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        start = [position.coords.longitude, position.coords.latitude];
+        start = await getDeviceOrigin();
         startLabel = 'My current location';
       } else {
         if (!selectedOrigin) throw new Error('Choose a Massachusetts location from the suggestions, or use My current location.');
