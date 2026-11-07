@@ -26,8 +26,8 @@ const isMassachusetts = (feature: PhotonFeature) => {
   const [lon, lat] = feature.geometry?.coordinates ?? [];
   return (state === 'massachusetts' || state === 'ma') &&
     Number.isFinite(lon) && Number.isFinite(lat) &&
-    lon >= bounds[0] && lon <= bounds[2] &&
-    lat >= bounds[1] && lat <= bounds[3];
+    lon! >= bounds[0] && lon! <= bounds[2] &&
+    lat! >= bounds[1] && lat! <= bounds[3];
 };
 
 function formatResult(feature: PhotonFeature) {
