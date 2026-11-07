@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { router } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Speech from 'expo-speech';
@@ -18,9 +18,21 @@ export default function ExploreMap() {
   const camera = useRef<CameraRef>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [styleReady, setStyleReady] = useState(false);
+  const [mapError, setMapError] = useState(false);
   const selectedSite = sites.find(site => site.id === selectedId);
 
-  useEffect(() => () => { void Speech.stop(); }, []);
+  // Expo Router keeps earlier stack screens mounted. Release the native renderer
+  // when moving from Map to the builder/detail pages instead of rendering behind them.
+  useFocusEffect(useCallback(() => {
+    setIsFocused(true);
+    return () => {
+      setIsFocused(false);
+      setStyleReady(false);
+      void Speech.stop();
+    };
+  }, []));
 
   async function closePreview() {
     await Speech.stop();
@@ -56,18 +68,17 @@ export default function ExploreMap() {
   }
 
   useEffect(() => {
-    const points = plan?.coordinates ?? sites.map((s) => s.coordinate);
+    if (!isFocused || !styleReady) return;
+    const points = plan?.coordinates ?? sites.map(site => site.coordinate);
     if (points.length < 2) return;
-    const lons = points.map((p) => p[0]);
-    const lats = points.map((p) => p[1]);
-    const timer = setTimeout(() => {
-      camera.current?.fitBounds(
-        [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)],
-        { duration: 550, padding: { top: 110, bottom: 250, left: 42, right: 42 } },
-      );
-    }, 550);
-    return () => clearTimeout(timer);
-  }, [plan, sites]);
+    const lons = points.map(point => point[0]);
+    const lats = points.map(point => point[1]);
+    // Camera operations must wait for MapLibre's style, not a fixed timeout.
+    camera.current?.fitBounds(
+      [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)],
+      { duration: 550, padding: { top: 190, bottom: 310, left: 42, right: 42 } },
+    );
+  }, [isFocused, styleReady, plan, sites]);
 
   const geometry = plan ? {
     type: 'Feature' as const,
@@ -77,7 +88,13 @@ export default function ExploreMap() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom', 'left', 'right']}>
-      <Map style={StyleSheet.absoluteFill} mapStyle={styleUrl}>
+      {isFocused && <Map
+        style={StyleSheet.absoluteFill}
+        mapStyle={styleUrl}
+        androidView="texture"
+        onDidFinishLoadingStyle={() => { setStyleReady(true); setMapError(false); }}
+        onDidFailLoadingMap={() => { setStyleReady(false); setMapError(true); }}
+      >
         <Camera ref={camera} initialViewState={{ center: [-71.276, 42.4906], zoom: 12.7 }} />
         {geometry && (
           <GeoJSONSource id="historic-tour-route" data={geometry}>
@@ -100,7 +117,9 @@ export default function ExploreMap() {
             </Marker>
           );
         })}
-      </Map>
+      </Map>}
+
+      {mapError && <View style={styles.mapError}><Text style={styles.error}>The map style could not load. Check your connection and reopen Map.</Text></View>}
 
       <View style={[styles.topPanel, { top: insets.top + 12 }]}>
         <Text style={styles.kicker}>BEDFORD  /  WAYFINDER</Text>
@@ -153,6 +172,7 @@ export default function ExploreMap() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: wf.background },
+  mapError: { position: 'absolute', top: '48%', left: 20, right: 20, backgroundColor: wf.surface, borderRadius: 12, padding: 14 },
   topPanel: { position: 'absolute', top: 12, left: 16, right: 16, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: wf.border, backgroundColor: wf.surface, gap: 9 },
   kicker: { fontSize: 12, fontWeight: '700', color: wf.primary },
   title: { fontSize: 23, fontWeight: '700', color: wf.navy },
