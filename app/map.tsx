@@ -13,20 +13,10 @@ const styleUrl = process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfre
 
 export default function ExploreMap() {
   const { start, mode: requestedMode } = useLocalSearchParams<{ start?: string; mode?: string }>();
-  const { sites, plan, busy, progress, error, locateSites, createTour } = useTour();
+  const { sites, plan, busy, progress, error, createTour } = useTour();
   const [address, setAddress] = useState(typeof start === 'string' ? start : '');
   const [mode, setMode] = useState<DirectionsMode>(requestedMode === 'cycling' || requestedMode === 'bike' ? 'cycling' : requestedMode === 'driving' || requestedMode === 'drive' ? 'driving' : 'walking');
-  const [siteError, setSiteError] = useState<string | null>(null);
-  const [loadingSites, setLoadingSites] = useState(true);
   const camera = useRef<CameraRef>(null);
-
-  useEffect(() => {
-    let active = true;
-    void locateSites().catch((err) => {
-      if (active) setSiteError(err instanceof Error ? err.message : String(err));
-    }).finally(() => { if (active) setLoadingSites(false); });
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     const points = plan?.coordinates ?? sites.map((s) => s.coordinate);
@@ -50,7 +40,7 @@ export default function ExploreMap() {
 
   async function generate(useGps: boolean) {
     const ok = await createTour(address, mode, useGps);
-    if (ok) setSiteError(null);
+    // Errors are exposed by the tour provider.
   }
 
   return (
@@ -110,8 +100,7 @@ export default function ExploreMap() {
           {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.ctaText}>Create my 5-stop tour  →</Text>}
         </Pressable>
         {busy && <Text style={styles.helper}>{progress}</Text>}
-        {!!(error || siteError) && <Text style={styles.error}>{error || siteError}</Text>}
-        {loadingSites && <Text style={styles.helper}>Locating the five historical sites…</Text>}
+        {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
 
       <View style={styles.bottomPanel}>
@@ -135,7 +124,7 @@ export default function ExploreMap() {
         ) : (
           <>
             <Text style={styles.panelTitle}>5 real Bedford historical places</Text>
-            <Text style={styles.panelSubtitle}>The numbered map markers open historical information. Choose your location to build a street-based route.</Text>
+            <Text style={styles.panelSubtitle}>The five landmark markers load immediately without GPS permission. Choose your location to plan a route.</Text>
           </>
         )}
       </View>
