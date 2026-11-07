@@ -2,13 +2,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Speech from 'expo-speech';
 import { Camera, GeoJSONSource, Layer, Map, Marker } from '@maplibre/maplibre-react-native';
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import { BottomNav, wf } from '../src/components/WayfinderUI';
 import { TOUR_SITES } from '../src/data/tourSites';
 import { useTour } from '../src/context/TourContext';
 import { HistoricPointSheet } from '../src/components/molecules/HistoricPointSheet';
+import { useAudioTour } from '../src/context/AudioTourContext';
 
 const styleUrl = process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -17,7 +17,7 @@ export default function ExploreMap() {
   const insets = useSafeAreaInsets();
   const camera = useRef<CameraRef>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const { activeSite: audioSite, state: audioState, toggleSite } = useAudioTour();
   const [isFocused, setIsFocused] = useState(false);
   const [styleReady, setStyleReady] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -30,41 +30,14 @@ export default function ExploreMap() {
     return () => {
       setIsFocused(false);
       setStyleReady(false);
-      void Speech.stop();
     };
   }, []));
 
-  async function closePreview() {
-    await Speech.stop();
-    setPlaying(false);
-    setSelectedId(null);
-  }
-
-  async function openPreview(id: string) {
-    await Speech.stop();
-    setPlaying(false);
-    setSelectedId(id);
-  }
-
-  async function toggleNarration() {
+  function closePreview() { setSelectedId(null); }
+  function openPreview(id: string) { setSelectedId(id); }
+  function showDetails() {
     if (!selectedSite) return;
-    await Speech.stop();
-    if (playing) { setPlaying(false); return; }
-    setPlaying(true);
-    Speech.speak(selectedSite.narration, {
-      language: 'en-US', rate: 0.9,
-      onDone: () => setPlaying(false),
-      onStopped: () => setPlaying(false),
-      onError: () => setPlaying(false),
-    });
-  }
-
-  async function showDetails() {
-    if (!selectedSite) return;
-    const siteId = selectedSite.id;
-    await Speech.stop();
-    setPlaying(false);
-    router.push({ pathname: '/site/[id]', params: { id: siteId } });
+    router.push({ pathname: '/site/[id]', params: { id: selectedSite.id } });
   }
 
   useEffect(() => {
@@ -159,8 +132,8 @@ export default function ExploreMap() {
         <HistoricPointSheet
           key={selectedSite.id}
           site={selectedSite}
-          playing={playing}
-          onToggleAudio={() => { void toggleNarration(); }}
+          playing={audioState === 'playing' && audioSite?.id === selectedSite.id}
+          onToggleAudio={() => { void toggleSite(selectedSite); }}
           onInfo={() => { void showDetails(); }}
           onClose={() => { void closePreview(); }}
         />
