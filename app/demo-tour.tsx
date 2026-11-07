@@ -6,11 +6,13 @@ import { Camera, GeoJSONSource, Layer, Map, Marker } from '@maplibre/maplibre-re
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import { BottomNav, wf } from '../src/components/WayfinderUI';
 import { useTour } from '../src/context/TourContext';
+import { useAudioTour } from '../src/context/AudioTourContext';
 
 const styleUrl = process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty';
 
 export default function DemoTour() {
   const { plan } = useTour();
+  const { autoNarration, locationMessage, enableProximity, disableProximity, activeSite: audioSite, state: audioState, toggleSite } = useAudioTour();
   const [paused, setPaused] = useState(false);
   const [stopIndex, setStopIndex] = useState(0);
   const [directionIndex, setDirectionIndex] = useState(0);
@@ -23,6 +25,14 @@ export default function DemoTour() {
     setIsFocused(true);
     return () => { setIsFocused(false); setStyleReady(false); };
   }, []));
+
+  // Start foreground proximity narration when a guided tour begins.
+  // This requests location permission and does not track location in the background.
+  useEffect(() => {
+    if (isFocused && plan && !autoNarration) {
+      void enableProximity();
+    }
+  }, [isFocused, plan, autoNarration, enableProximity]);
 
   useEffect(() => {
     if (!plan || !styleReady || !isFocused || plan.coordinates.length < 2) return;
@@ -70,6 +80,7 @@ export default function DemoTour() {
       setStopIndex((value) => value + 1);
       setDirectionIndex(0);
     } else {
+      disableProximity();
       router.push('/map');
     }
   }
@@ -135,6 +146,17 @@ export default function DemoTour() {
           </Pressable>
         </View>
 
+        <View style={styles.audioActions}>
+          <Pressable style={styles.audioControl} accessibilityRole="button"
+            onPress={() => { void toggleSite(leg.destination); }}>
+            <Text style={styles.audioControlText}>{audioSite?.id === leg.destination.id && audioState === 'playing' ? 'Pause story' : 'Play this story'}</Text>
+          </Pressable>
+          <Pressable style={styles.audioControl} accessibilityRole="button"
+            onPress={() => { if (autoNarration) disableProximity(); else void enableProximity(); }}>
+            <Text style={styles.audioControlText}>{autoNarration ? 'Turn off auto narration' : 'Enable auto narration'}</Text>
+          </Pressable>
+        </View>
+        {!!locationMessage && <Text style={styles.note}>{locationMessage}</Text>}
         <View style={styles.buttons}>
           <Pressable style={styles.secondaryButton}
             disabled={directionIndex === 0 && stopIndex === 0}
@@ -148,7 +170,7 @@ export default function DemoTour() {
             <Text style={styles.secondaryText}>‹ Previous</Text>
           </Pressable>
           <Pressable style={styles.primarySmall} onPress={nextDirection}>
-            <Text style={styles.primaryText}>{directionIndex < leg.route.steps.length - 1 ? 'Next direction  →' : stopIndex < 4 ? 'Next stop  →' : 'Finish tour  →'}</Text>
+            <Text style={styles.primaryText}>{directionIndex < leg.route.steps.length - 1 ? 'Next direction  →' : stopIndex < totalStops - 1 ? 'Next stop  →' : 'Finish tour  →'}</Text>
           </Pressable>
         </View>
 
@@ -184,6 +206,9 @@ const styles = StyleSheet.create({
   audioSub: { color: '#65749A', fontSize: 12, lineHeight: 16 },
   link: { color: wf.blue, fontSize: 13, fontWeight: '700', marginTop: 5 },
   buttons: { flexDirection: 'row', gap: 8 },
+  audioActions: { flexDirection: 'row', gap: 8 },
+  audioControl: { flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: wf.lightBlue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
+  audioControlText: { color: wf.blue, fontSize: 12, fontWeight: '700' },
   secondaryButton: { flex: 1, minHeight: 48, borderWidth: 1, borderColor: wf.border, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   secondaryText: { color: wf.navy, fontSize: 13, fontWeight: '700' },
   primarySmall: { flex: 2, minHeight: 48, backgroundColor: wf.red, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
