@@ -13,6 +13,7 @@ type AudioTourContextValue = {
   playerVisible: boolean;
   dismissPlayer: () => void;
   showPlayer: () => void;
+  stopAndClose: () => Promise<void>;
   autoNarration: boolean;
   locationMessage: string | null;
   playSite: (site: TourSite) => Promise<void>;
@@ -146,6 +147,20 @@ export function AudioTourProvider({ children }: { children: React.ReactNode }) {
     await speakFrom(site, saved);
   }, [speakFrom]);
 
+  // A full close must terminate speech and clear the visible session.
+  // The last word position remains stored per site for a later manual play.
+  const stopAndClose = useCallback(async () => {
+    ++playback.current.generation;
+    queued.current = null;
+    activeSiteRef.current = null;
+    playback.current.siteId = null;
+    setStatus('idle');
+    setActiveSite(null);
+    setPlayerVisible(false);
+    setProgress(0);
+    await Speech.stop();
+  }, [setStatus]);
+
   const pause = useCallback(async () => {
     if (stateRef.current !== 'playing') return;
     ++playback.current.generation; // invalidate any callbacks from stopped utterance
@@ -238,7 +253,7 @@ export function AudioTourProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AudioTourContext.Provider value={{
-      activeSite, state, progress, playerVisible, dismissPlayer, showPlayer, autoNarration, locationMessage,
+      activeSite, state, progress, playerVisible, dismissPlayer, showPlayer, stopAndClose, autoNarration, locationMessage,
       playSite, pause, resume, toggleSite, replay, enableProximity, disableProximity,
     }}>
       {children}
