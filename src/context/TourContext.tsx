@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import * as Location from 'expo-location';
 import { TOUR_SITES, type TourSite } from '../data/tourSites';
-import { geocodeOrigin, planInAppRoute, type LngLat, type PlannedRoute } from '../services/inAppRouting';
+import { planInAppRoute, type LngLat, type PlannedRoute } from '../services/inAppRouting';
 import type { DirectionsMode } from '../services/demoTour';
 
 export type LocatedSite = TourSite;
@@ -23,7 +23,7 @@ type ContextValue = {
   progress: string;
   error: string | null;
   locateSites: () => Promise<LocatedSite[]>;
-  createTour: (address: string, mode: DirectionsMode, useCurrentLocation: boolean, selectedIds: string[]) => Promise<boolean>;
+  createTour: (address: string, mode: DirectionsMode, useCurrentLocation: boolean, selectedIds: string[], selectedOrigin?: LngLat) => Promise<boolean>;
 };
 
 const TourContext = createContext<ContextValue | null>(null);
@@ -61,7 +61,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     return TOUR_SITES;
   }
 
-  async function createTour(address: string, mode: DirectionsMode, useCurrentLocation: boolean, selectedIds: string[]) {
+  async function createTour(address: string, mode: DirectionsMode, useCurrentLocation: boolean, selectedIds: string[], selectedOrigin?: LngLat) {
     if (busy) return false;
     setBusy(true);
     setError(null);
@@ -77,8 +77,8 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
         start = [position.coords.longitude, position.coords.latitude];
         startLabel = 'My current location';
       } else {
-        if (!address.trim()) throw new Error('Enter a starting address or select My location.');
-        start = await geocodeOrigin(address);
+        if (!selectedOrigin) throw new Error('Choose a Massachusetts location from the suggestions, or use My current location.');
+        start = selectedOrigin;
       }
       const selectedSet = new Set(selectedIds);
       const located = sites.filter((site) => selectedSet.has(site.id));
