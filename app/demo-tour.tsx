@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   stepBadge: { width: 100, height: 30, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 10 },
   stepText: { fontSize: 12, color: wf.ink },
   mapFrame: { height: 240, borderRadius: 12, overflow: 'hidden', backgroundColor: wf.map },
-  mapError: { ...StyleSheet.absoluteFillObject, backgroundColor: wf.surface, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  mapError: { ...StyleSheet.absoluteFill, backgroundColor: wf.surface, alignItems: 'center', justifyContent: 'center', padding: 16 },
   direction: { borderRadius: 12, minHeight: 94, backgroundColor: wf.blue, paddingHorizontal: 15, paddingVertical: 14, gap: 8 },
   directionTitle: { color: '#FFFFFF', fontSize: 16, lineHeight: 22, fontWeight: '700' },
   directionSub: { color: '#E1EAFF', fontSize: 12, lineHeight: 16 },
