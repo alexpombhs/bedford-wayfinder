@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Camera, GeoJSONSource, Layer, Map, Marker } from '@maplibre/maplibre-react-native';
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import { BottomNav, wf } from '../src/components/WayfinderUI';
@@ -64,6 +65,8 @@ export default function DemoTour() {
   const totalStops = plan.legs.length;
   const leg = plan.legs[stopIndex];
   const direction = leg.route.steps[directionIndex];
+  const storyPlaying = audioSite?.id === leg.destination.id && audioState === 'playing';
+  const storyPaused = audioSite?.id === leg.destination.id && audioState === 'paused';
   const routeShape = {
     type: 'Feature' as const,
     properties: {},
@@ -142,16 +145,28 @@ export default function DemoTour() {
 
         <View style={styles.audioNotice}>
           <Text style={styles.audioTitle}>♪  History at {leg.destination.name}</Text>
-          <Text style={styles.audioSub}>Open the stop to read its history and play narration.</Text>
+          <Text style={styles.audioSub}>Listen to the history as you explore, or read the full story.</Text>
           <Pressable onPress={() => router.push({ pathname: '/site/[id]', params: { id: leg.destination.id } })}>
             <Text style={styles.link}>View historical stop  →</Text>
           </Pressable>
         </View>
 
         <View style={styles.audioActions}>
-          <Pressable style={styles.audioControl} accessibilityRole="button"
-            onPress={() => { void toggleSite(leg.destination); }}>
-            <Text style={styles.audioControlText}>{audioSite?.id === leg.destination.id && audioState === 'playing' ? 'Pause story' : 'Play this story'}</Text>
+          <Pressable
+            style={[styles.audioControl, styles.storyAudioButton]}
+            accessibilityRole="button"
+            accessibilityLabel={storyPlaying ? 'Pause audio story about ' + leg.destination.name : 'Play or resume audio story about ' + leg.destination.name}
+            onPress={() => { void toggleSite(leg.destination); }}
+          >
+            <Ionicons
+              name={storyPlaying ? 'pause-circle' : 'play-circle'}
+              size={27}
+              color={wf.blue}
+            />
+            <View style={styles.storyAudioText}>
+              <Text style={styles.audioControlText}>{storyPlaying ? 'Pause audio' : storyPaused ? 'Resume audio' : 'Play audio story'}</Text>
+              <Text style={styles.storyAudioCaption}>Narrated history</Text>
+            </View>
           </Pressable>
           <Pressable style={styles.audioControl} accessibilityRole="button"
             onPress={() => { if (autoNarration) disableProximity(); else void enableProximity(); }}>
@@ -211,6 +226,9 @@ const styles = StyleSheet.create({
   audioActions: { flexDirection: 'row', gap: 8 },
   audioControl: { flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: wf.lightBlue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
   audioControlText: { color: wf.blue, fontSize: 12, fontWeight: '700' },
+  storyAudioButton: { flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: wf.blue, backgroundColor: '#EDF4FF' },
+  storyAudioText: { flexShrink: 1, gap: 1 },
+  storyAudioCaption: { fontSize: 10, lineHeight: 13, color: wf.muted },
   secondaryButton: { flex: 1, minHeight: 48, borderWidth: 1, borderColor: wf.border, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   secondaryText: { color: wf.navy, fontSize: 13, fontWeight: '700' },
   primarySmall: { flex: 2, minHeight: 48, backgroundColor: wf.red, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
