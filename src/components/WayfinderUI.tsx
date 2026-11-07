@@ -26,7 +26,7 @@ export function BottomNav({ active = 'explore' }: BottomNavProps) {
     { key: 'explore', label: 'Explore', icon: 'compass-outline', activeIcon: 'compass', go: () => router.replace('/') },
     { key: 'map', label: 'Map', icon: 'map-outline', activeIcon: 'map', go: () => router.push('/map') },
     { key: 'saved', label: 'Saved', icon: 'heart-outline', activeIcon: 'heart', go: undefined },
-    { key: 'more', label: 'More', icon: 'ellipsis-horizontal-circle-outline', activeIcon: 'ellipsis-horizontal-circle', go: undefined },
+    { key: 'more', label: 'More', icon: 'ellipsis-horizontal', activeIcon: 'ellipsis-horizontal', go: undefined },
   ] as const;
 
   return (
