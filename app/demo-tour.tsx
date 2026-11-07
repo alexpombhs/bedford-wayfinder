@@ -45,6 +45,7 @@ export default function DemoTour() {
     );
   }
 
+  const totalStops = plan.legs.length;
   const leg = plan.legs[stopIndex];
   const direction = leg.route.steps[directionIndex];
   const routeShape = {
@@ -61,7 +62,7 @@ export default function DemoTour() {
   function nextDirection() {
     if (directionIndex < leg.route.steps.length - 1) {
       setDirectionIndex((value) => value + 1);
-    } else if (stopIndex < plan.legs.length - 1) {
+    } else if (stopIndex < totalStops - 1) {
       setStopIndex((value) => value + 1);
       setDirectionIndex(0);
     } else {
@@ -79,7 +80,7 @@ export default function DemoTour() {
             <Text style={styles.walkingText}>{plan.mode === 'walking' ? 'Walking' : plan.mode === 'cycling' ? 'Biking' : 'Driving'}</Text>
           </View>
           <View style={styles.stepBadge}>
-            <Text style={styles.stepText}>Stop {stopIndex + 1} / {plan.legs.length}</Text>
+            <Text style={styles.stepText}>Stop {stopIndex + 1} / {totalStops}</Text>
           </View>
         </View>
 
