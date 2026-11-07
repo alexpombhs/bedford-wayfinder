@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { router } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, GeoJSONSource, Layer, Map, Marker } from '@maplibre/maplibre-react-native';
@@ -15,20 +15,24 @@ export default function DemoTour() {
   const [stopIndex, setStopIndex] = useState(0);
   const [directionIndex, setDirectionIndex] = useState(0);
   const camera = useRef<CameraRef>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [styleReady, setStyleReady] = useState(false);
+  const [mapError, setMapError] = useState(false);
+
+  useFocusEffect(useCallback(() => {
+    setIsFocused(true);
+    return () => { setIsFocused(false); setStyleReady(false); };
+  }, []));
 
   useEffect(() => {
-    if (!plan) return;
-    const timer = setTimeout(() => {
-      const points = plan.coordinates;
-      const lons = points.map((p) => p[0]);
-      const lats = points.map((p) => p[1]);
-      camera.current?.fitBounds(
-        [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)],
-        { duration: 500, padding: { top: 40, bottom: 50, left: 35, right: 35 } }
-      );
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [plan]);
+    if (!plan || !styleReady || !isFocused || plan.coordinates.length < 2) return;
+    const lons = plan.coordinates.map(point => point[0]);
+    const lats = plan.coordinates.map(point => point[1]);
+    camera.current?.fitBounds(
+      [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)],
+      { duration: 500, padding: { top: 40, bottom: 50, left: 35, right: 35 } },
+    );
+  }, [plan, styleReady, isFocused]);
 
   if (!plan) {
     return (
@@ -85,7 +89,13 @@ export default function DemoTour() {
         </View>
 
         <View style={styles.mapFrame}>
-          <Map style={StyleSheet.absoluteFill} mapStyle={styleUrl}>
+          {isFocused && <Map
+            style={StyleSheet.absoluteFill}
+            mapStyle={styleUrl}
+            androidView="texture"
+            onDidFinishLoadingStyle={() => { setStyleReady(true); setMapError(false); }}
+            onDidFailLoadingMap={() => { setStyleReady(false); setMapError(true); }}
+          >
             <Camera ref={camera} initialViewState={{ center: [-71.276, 42.4906], zoom: 12.7 }} />
             <GeoJSONSource id="whole-tour" data={routeShape}>
               <Layer id="whole-tour-line" source="whole-tour" type="line"
@@ -106,7 +116,8 @@ export default function DemoTour() {
                 </View>
               </Marker>
             ))}
-          </Map>
+          </Map>}
+          {mapError && <View style={styles.mapError}><Text style={styles.note}>Map could not load. Check your connection and reopen the tour.</Text></View>}
         </View>
 
         <View style={styles.direction}>
@@ -164,6 +175,7 @@ const styles = StyleSheet.create({
   stepBadge: { width: 100, height: 30, borderRadius: 12, backgroundColor: wf.lightBlue, justifyContent: 'center', paddingHorizontal: 10 },
   stepText: { fontSize: 12, color: wf.ink },
   mapFrame: { height: 240, borderRadius: 12, overflow: 'hidden', backgroundColor: wf.map },
+  mapError: { ...StyleSheet.absoluteFillObject, backgroundColor: wf.surface, alignItems: 'center', justifyContent: 'center', padding: 16 },
   direction: { borderRadius: 12, minHeight: 94, backgroundColor: wf.blue, paddingHorizontal: 15, paddingVertical: 14, gap: 8 },
   directionTitle: { color: '#FFFFFF', fontSize: 16, lineHeight: 22, fontWeight: '700' },
   directionSub: { color: '#E1EAFF', fontSize: 12, lineHeight: 16 },
