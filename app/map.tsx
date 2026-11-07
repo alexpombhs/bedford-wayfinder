@@ -1,12 +1,14 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Speech from 'expo-speech';
 import { Camera, GeoJSONSource, Layer, Map, Marker } from '@maplibre/maplibre-react-native';
 import type { CameraRef } from '@maplibre/maplibre-react-native';
 import { BottomNav, wf } from '../src/components/WayfinderUI';
 import { TOUR_SITES } from '../src/data/tourSites';
 import { useTour } from '../src/context/TourContext';
+import { HistoricPointSheet } from '../src/components/molecules/HistoricPointSheet';
 
 const styleUrl = process.env.EXPO_PUBLIC_MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -14,6 +16,44 @@ export default function ExploreMap() {
   const { sites, plan } = useTour();
   const insets = useSafeAreaInsets();
   const camera = useRef<CameraRef>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const selectedSite = sites.find(site => site.id === selectedId);
+
+  useEffect(() => () => { void Speech.stop(); }, []);
+
+  async function closePreview() {
+    await Speech.stop();
+    setPlaying(false);
+    setSelectedId(null);
+  }
+
+  async function openPreview(id: string) {
+    await Speech.stop();
+    setPlaying(false);
+    setSelectedId(id);
+  }
+
+  async function toggleNarration() {
+    if (!selectedSite) return;
+    await Speech.stop();
+    if (playing) { setPlaying(false); return; }
+    setPlaying(true);
+    Speech.speak(selectedSite.narration, {
+      language: 'en-US', rate: 0.9,
+      onDone: () => setPlaying(false),
+      onStopped: () => setPlaying(false),
+      onError: () => setPlaying(false),
+    });
+  }
+
+  async function showDetails() {
+    if (!selectedSite) return;
+    const siteId = selectedSite.id;
+    await Speech.stop();
+    setPlaying(false);
+    router.push({ pathname: '/site/[id]', params: { id: siteId } });
+  }
 
   useEffect(() => {
     const points = plan?.coordinates ?? sites.map((s) => s.coordinate);
@@ -55,7 +95,7 @@ export default function ExploreMap() {
           const index = position >= 0 ? position + 1 : TOUR_SITES.findIndex((s) => s.id === site.id) + 1;
           return (
             <Marker key={site.id} id={'historic-' + site.id} lngLat={site.coordinate}
-              onPress={() => router.push({ pathname: '/site/[id]', params: { id: site.id } })}>
+              onPress={() => { void openPreview(site.id); }}>
               <View style={styles.sitePin}><Text style={styles.pinText}>{index}</Text></View>
             </Marker>
           );
@@ -71,7 +111,7 @@ export default function ExploreMap() {
         </Pressable>
       </View>
 
-      <View style={styles.bottomPanel}>
+      {!selectedSite && <View style={styles.bottomPanel}>
         {plan ? (
           <>
             <Text style={styles.panelTitle}>Your tour · {plan.legs.length} stops</Text>
@@ -95,7 +135,17 @@ export default function ExploreMap() {
             <Text style={styles.panelSubtitle}>Explore the available landmarks, then create a personalized tour with the places you choose.</Text>
           </>
         )}
-      </View>
+      </View>}
+      {selectedSite && (
+        <HistoricPointSheet
+          key={selectedSite.id}
+          site={selectedSite}
+          playing={playing}
+          onToggleAudio={() => { void toggleNarration(); }}
+          onInfo={() => { void showDetails(); }}
+          onClose={() => { void closePreview(); }}
+        />
+      )}
       <BottomNav active="map" />
     </SafeAreaView>
   );
