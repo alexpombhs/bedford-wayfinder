@@ -50,6 +50,9 @@ export function MassachusettsAddressAutocomplete({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const sequence = useRef(0);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => { if (blurTimer.current) clearTimeout(blurTimer.current); }, []);
 
   useEffect(() => {
     const requestId = ++sequence.current;
@@ -100,8 +103,8 @@ export function MassachusettsAddressAutocomplete({
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onFocus={() => { if (blurTimer.current) clearTimeout(blurTimer.current); setFocused(true); }}
+          onBlur={() => { blurTimer.current = setTimeout(() => setFocused(false), 220); }}
           placeholder="Search Massachusetts addresses or landmarks"
           placeholderTextColor={wf.muted}
           autoCapitalize="words"
