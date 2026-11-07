@@ -105,11 +105,11 @@ export function MassachusettsAddressAutocomplete({
           onChangeText={onChangeText}
           onFocus={() => { if (blurTimer.current) clearTimeout(blurTimer.current); setFocused(true); }}
           onBlur={() => { blurTimer.current = setTimeout(() => setFocused(false), 220); }}
-          placeholder="Search Massachusetts addresses or landmarks"
+          placeholder="Enter your starting point"
           placeholderTextColor={wf.muted}
           autoCapitalize="words"
           autoCorrect={false}
-          accessibilityLabel="Search Massachusetts starting location"
+          accessibilityLabel="Enter your starting point"
         />
         {selected && <Ionicons name="checkmark-circle" color={wf.blue} size={20} />}
       </View>
