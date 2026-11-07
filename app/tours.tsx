@@ -37,8 +37,8 @@ export default function Tours() {
           </Pressable>
         ))}
 
-        <Pressable style={styles.cta} onPress={() => router.push('/map')}>
-          <Text style={styles.ctaText}>Plan my route on the map  →</Text>
+        <Pressable style={styles.cta} onPress={() => router.push({ pathname: '/tour-builder', params: { preset: 'all' } })}>
+          <Text style={styles.ctaText}>Start My Guided Tour  →</Text>
         </Pressable>
       </ScrollView>
       <BottomNav active="explore" />
