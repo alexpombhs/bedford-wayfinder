@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Speech from 'expo-speech';
 import * as Linking from 'expo-linking';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNav, wf } from '../../src/components/WayfinderUI';
 import { TOUR_SITES } from '../../src/data/tourSites';
+import { useAudioTour } from '../../src/context/AudioTourContext';
 
 export default function SiteDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const site = TOUR_SITES.find((s) => s.id === id);
-  const [playing, setPlaying] = useState(false);
+  const { activeSite: audioSite, state: audioState, toggleSite, replay } = useAudioTour();
+  const playing = audioSite?.id === site?.id && audioState === 'playing';
   const [captions, setCaptions] = useState(false);
 
-  useEffect(() => () => { void Speech.stop(); }, [id]);
   if (!site) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
@@ -21,27 +21,6 @@ export default function SiteDetail() {
         <BottomNav active="explore" />
       </SafeAreaView>
     );
-  }
-
-  async function play() {
-    await Speech.stop();
-    setPlaying(true);
-    Speech.speak(site!.narration, {
-      rate: 0.9,
-      language: 'en-US',
-      onDone: () => setPlaying(false),
-      onStopped: () => setPlaying(false),
-      onError: () => setPlaying(false),
-    });
-  }
-
-  async function toggleAudio() {
-    if (playing) {
-      await Speech.stop();
-      setPlaying(false);
-    } else {
-      await play();
-    }
   }
 
   const stopNumber = TOUR_SITES.findIndex((s) => s.id === site.id) + 1;
@@ -67,7 +46,7 @@ export default function SiteDetail() {
 
         <View style={styles.audioCard}>
           <View style={styles.audioTop}>
-            <Pressable style={styles.playButton} onPress={() => void toggleAudio()} accessibilityRole="button">
+            <Pressable style={styles.playButton} onPress={() => { void toggleSite(site); }} accessibilityRole="button">
               <Text style={styles.playIcon}>{playing ? 'Ⅱ' : '▷'}</Text>
             </Pressable>
             <View style={styles.audioInformation}>
@@ -76,8 +55,8 @@ export default function SiteDetail() {
             </View>
           </View>
           <View style={styles.controls}>
-            <Pressable onPress={() => void play()}><Text style={styles.control}>Replay</Text></Pressable>
-            <Pressable onPress={() => void toggleAudio()}><Text style={styles.control}>{playing ? 'Stop' : 'Play'}</Text></Pressable>
+            <Pressable onPress={() => { void replay(site); }}><Text style={styles.control}>Replay</Text></Pressable>
+            <Pressable onPress={() => void toggleAudio()}><Text style={styles.control}>{playing ? 'Pause' : 'Play / Resume'}</Text></Pressable>
             <Pressable onPress={() => setCaptions((p) => !p)}><Text style={styles.control}>{captions ? 'Hide text' : 'Captions'}</Text></Pressable>
           </View>
         </View>
