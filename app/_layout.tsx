@@ -1,13 +1,22 @@
 import React from 'react';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { SitesProvider } from '../src/context/SitesContext';
+import { TourProvider } from '../src/context/TourContext';
+import { AudioTourProvider } from '../src/context/AudioTourContext';
+import { PersistentAudioPlayer } from '../src/components/organisms/PersistentAudioPlayer';
 import { colors } from '../src/theme';
+
 export default function RootLayout() {
-  return <SitesProvider><Stack screenOptions={{ headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.ink, contentStyle: { backgroundColor: colors.background } }}>
-    <Stack.Screen name="index" options={{ title: 'Bedford Wayfinder' }} />
-    <Stack.Screen name="demo-tour" options={{ title: 'Guided tour demo' }} />
-    <Stack.Screen name="map" options={{ title: 'Explore map' }} />
-    <Stack.Screen name="tours" options={{ title: 'Build a tour' }} />
-    <Stack.Screen name="site/[id]" options={{ title: 'Historical site' }} />
-  </Stack></SitesProvider>;
+  return (
+    <SitesProvider>
+      <TourProvider>
+        <AudioTourProvider>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+          <PersistentAudioPlayer />
+        </AudioTourProvider>
+      </TourProvider>
+    </SitesProvider>
+  );
 }
